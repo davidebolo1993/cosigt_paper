@@ -6,4 +6,4 @@ Repository containing code for the methodological paper on [cosigt](https://gith
 
 [Code](real_data) used for real data
 
-Each folder includes a dedicated README.md file.
+Each folder includes a dedicated README file.
