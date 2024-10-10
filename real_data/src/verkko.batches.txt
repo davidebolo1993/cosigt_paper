@@ -1,0 +1,3 @@
+20230818_verkko_batch1	20230818_verkko_batch1.MANIFEST.txt
+20230927_verkko_batch2	20230927_verkko_batch2.MANIFEST.tsv
+20240201_verkko_batch3	20240201_verkko_batch3.manifest.tsv

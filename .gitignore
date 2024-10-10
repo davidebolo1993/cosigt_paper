@@ -1,2 +1,4 @@
 !.gitignore
 !*/.gitignore
+real_data/data/*
+real_data/src/*log
