@@ -2,7 +2,7 @@
 #SBATCH --job-name=download.data
 #SBATCH --mail-type=END
 #SBATCH --partition=cpuq
-#SBATCH --time=8:00:00
+#SBATCH --time=24:00:00
 #SBATCH --ntasks=1
 #SBATCH --output=%x_%A_%a.log
 #SBATCH --cpus-per-task=10
@@ -28,18 +28,21 @@ mkdir -p $BATCH_BASE
 
 wget https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/working/$batch/$manifest -P $BATCH_BASE
 
-for sample in $(grep ".fasta.gz" $BATCH_BASE/$manifest | cut -d "/" -f 3 | sort | uniq); do 
+for sample in $(grep ".fasta.gz" $BATCH_BASE/$manifest | grep -v '20230818_verkko_batch1.*HG00732\|HG00732.*20230818_verkko_batch1' | cut -d "/" -f 3 | sort | uniq); do 
     echo $batch $sample
     SAMPLE_BASE=$DATA_BASE/$batch/$sample
-    mkdir -p $SAMPLE_BASE
 
-    #download to base
-    wget -c https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/working/$batch/assemblies/$sample/$sample.vrk-ps-sseq.asm-hap1.fasta.gz -P $SAMPLE_BASE
-    wget -c https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/working/$batch/assemblies/$sample/$sample.vrk-ps-sseq.asm-hap2.fasta.gz -P $SAMPLE_BASE
-    wget -c https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/working/$batch/assemblies/$sample/$sample.vrk-ps-sseq.asm-unassigned.fasta.gz -P $SAMPLE_BASE
+    if [ ! -d $SAMPLE_BASE ]; then
 
-    #to panSN-spec
-    zcat $(ls $SAMPLE_BASE/*gz | sort) | sed -e "s/>haplotype1/>$sample#1#haplotype1/g" -e "s/>haplotype2/>$sample#2#haplotype2/g" -e "s/>unassigned/>$sample#U#unassigned/g" | bgzip -@ 10 -l 9 > $SAMPLE_BASE/$sample.fa.gz
+        mkdir -p $SAMPLE_BASE
+        #download to base
+        wget -c https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/working/$batch/assemblies/$sample/$sample.vrk-ps-sseq.asm-hap1.fasta.gz -P $SAMPLE_BASE
+        wget -c https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/working/$batch/assemblies/$sample/$sample.vrk-ps-sseq.asm-hap2.fasta.gz -P $SAMPLE_BASE
+        wget -c https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/working/$batch/assemblies/$sample/$sample.vrk-ps-sseq.asm-unassigned.fasta.gz -P $SAMPLE_BASE
+        #to panSN-spec
+        zcat $(ls $SAMPLE_BASE/*gz | sort) | sed -e "s/>haplotype1/>$sample#1#haplotype1/g" -e "s/>haplotype2/>$sample#2#haplotype2/g" -e "s/>unassigned/>$sample#U#unassigned/g" | bgzip -@ 10 -l 9 > $SAMPLE_BASE/$sample.fa.gz
+
+    fi 
 
 done
 
