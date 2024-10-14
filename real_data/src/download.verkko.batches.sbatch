@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=download.data
+#SBATCH --job-name=download.verkko
 #SBATCH --mail-type=END
 #SBATCH --partition=cpuq
 #SBATCH --time=24:00:00
@@ -21,8 +21,9 @@ module load htslib-tools/1.14
 
 DIR_BASE=$(readlink -f ..)
 DATA_BASE=$DIR_BASE/data
-batch=$(head -n $SLURM_ARRAY_TASK_ID verkko.batches.txt | tail -1 | cut -f 1)
-manifest=$(head -n $SLURM_ARRAY_TASK_ID verkko.batches.txt | tail -1 | cut -f 2)
+RES_BASE=$DIR_BASE/resources
+batch=$(head -n $SLURM_ARRAY_TASK_ID $RES_BASE/verkko.batches.txt | tail -1 | cut -f 1)
+manifest=$(head -n $SLURM_ARRAY_TASK_ID $RES_BAS/verkko.batches.txt | tail -1 | cut -f 2)
 BATCH_BASE=$DATA_BASE/$batch
 mkdir -p $BATCH_BASE
 
