@@ -27,6 +27,15 @@ for sample in $(grep -h -f <(ls -d $DATA_BASE/*/* | grep -v -E "tsv|txt" | rev |
     wget -c $sample".crai" -P $DATA_BASE/1000G/$id
 done
 
+#after that, we still miss NA24385 and NA21487
+
+#NA24385 Project: PRJEB35491
+module load samtools/1.18
+mkdir -p $DATA_BASE/1000G/NA24385
+wget ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR368/ERR3684866/CT21796_NA24385_NIST_UDI22_HiseqX_19122017_Proband_S1.bam -P $DATA_BASE/1000G/NA24385
+samtools index $DATA_BASE/1000G/NA24385/CT21796_NA24385_NIST_UDI22_HiseqX_19122017_Proband_S1.bam
+
+#NA21487?
 #Closing statement
 echo "========================"
 echo "Completed: $(date)"
