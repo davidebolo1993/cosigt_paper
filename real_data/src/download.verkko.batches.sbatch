@@ -17,7 +17,8 @@ echo "Started: $(date)"
 echo "========================"
 
 #requires bgzip
-module load htslib-tools/1.14 
+module load htslib-tools/1.14
+module load samtools/1.18 
 
 DIR_BASE=$(readlink -f ..)
 DATA_BASE=$DIR_BASE/data
@@ -42,7 +43,7 @@ for sample in $(grep ".fasta.gz" $BATCH_BASE/$manifest | grep -v '20230818_verkk
         wget -c https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/working/$batch/assemblies/$sample/$sample.vrk-ps-sseq.asm-unassigned.fasta.gz -P $SAMPLE_BASE
         #to panSN-spec
         zcat $(ls $SAMPLE_BASE/*gz | sort) | sed -e "s/>haplotype1/>$sample#1#haplotype1/g" -e "s/>haplotype2/>$sample#2#haplotype2/g" -e "s/>unassigned/>$sample#U#unassigned/g" | bgzip -@ 10 -l 9 > $SAMPLE_BASE/$sample.fa.gz
-
+        samtools faidx $SAMPLE_BASE/$sample.fa.gz
     fi 
 
 done
