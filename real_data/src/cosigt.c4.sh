@@ -42,3 +42,5 @@ python workflow/scripts/organize.py \
 #run
 sh snakemake.singularity.profile.run.sh
 
+#benchmark
+#SINGULARITY_TMPDIR=/tmp snakemake --profile config/slurm --singularity-args "-B /group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/data/1000G,/group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/data/reference,/group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/data/verkko_by_chromosome/chr6,/localscratch,/group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/src/cosigt/cosigt_smk,/group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/data/c4 -e" benchmark
