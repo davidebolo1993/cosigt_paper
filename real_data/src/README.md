@@ -1,0 +1,4 @@
+[1](download.verkko.batches.sbatch). Download verkko assemblies and adatp to [PanSN-spec](https://github.com/pangenome/PanSN-spec).
+[2](download.1000G.samples.sbatch). Download short-read samples matching haplotypes in verkko assemblies.  
+[3](partition.verkko.bychrom.sbatch). Partitionate verkko assemblies by chromosome knowing which assembly belongs to which chromosome (Andrea to add on this).
+[4](cosigt.c4.sh). Run cosigt on verkko assemblies and matching short-read samples for C4 region - initial test.
