@@ -7,7 +7,7 @@ DIR_BASE=$(readlink -f ..)
 RES_BASE=$DIR_BASE/resources
 DATA_BASE=$DIR_BASE/data
 
-roi=$RES_BASE/c4.roi.bed
+roi=$RES_BASE/c4_lpa.roi.bed
 assemblies=$DATA_BASE/verkko_by_chromosome/chr6/chr6.fa.gz
 assembliesfa=$DATA_BASE/verkko_by_chromosome/chr6/chr6.fa
 zcat $assemblies > $assembliesfa
@@ -25,7 +25,6 @@ cookiecutter \
 #prepare sample map
 for s in $(ls $samples/*/*.*am); do cram=$(basename $s) && id=$(basename $(dirname $s)) && echo -e "$cram\t$id" >> sample.map.tsv ; done
 
-
 #download annotations
 wget https://raw.githubusercontent.com/davidebolo1993/cosigt/refs/heads/master/docfiles/chr6.c4.annotation.bed
 
@@ -35,7 +34,7 @@ python workflow/scripts/organize.py \
     -r $reference \
     --assemblies $assembliesfa \
     --roi $roi \
-    --output $DATA_BASE/c4 \
+    --output $DATA_BASE/hgsvcv3/c4_lpa \
     --samplemap sample.map.tsv \
     --annotation chr6.c4.annotation.bed
 
@@ -43,4 +42,5 @@ python workflow/scripts/organize.py \
 sh snakemake.singularity.profile.run.sh
 
 #benchmark
-#SINGULARITY_TMPDIR=/tmp snakemake --profile config/slurm --singularity-args "-B /group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/data/1000G,/group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/data/reference,/group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/data/verkko_by_chromosome/chr6,/localscratch,/group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/src/cosigt/cosigt_smk,/group/soranzo/davide.bolognini/working/dev/cosigt_paper/real_data/data/c4 -e" benchmark
+sed 's/ cosigt / benchmark /' snakemake.singularity.profile.run.sh > snakemake.singularity.profile.benchmark.sh
+sh snakemake.singularity.profile.benchmark.sh
