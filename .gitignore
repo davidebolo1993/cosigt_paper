@@ -2,3 +2,4 @@
 !*/.gitignore
 real_data/data/*
 real_data/src/logs/*log
+!readl_data/data/.gitignore
