@@ -1,11 +1,10 @@
 # Cosigt manuscript
 
-Repository containing code for the methodological paper on [cosigt](https://github.com/davidebolo1993/cosigt) tool.
+Repository containing code for [cosigt](https://github.com/davidebolo1993/cosigt) paper.
 
-[Code](simulated_data) used for simulated data.
-
-[Code](real_data) used for real data.
+[1] [Code](real_data) used for the analysis of real data from [HGSVCv3](https://www.internationalgenome.org/data-portal/data-collection/hgsvc3).
+[2] XXX
 
 Each folder includes a dedicated README file.
 
-TODO list [here](https://docs.google.com/document/d/12AIuWV0DdRXscb78TZSYydWzaojrGvzcWiyRpHOwYDo/edit?tab=t.0) 
+

@@ -1,6 +1,4 @@
 !.gitignore
 !*/.gitignore
 real_data/data/*
-real_data/src/*log
-real_data/src/cosigt
-real_data/src/cosigt/*
+real_data/src/logs/*log
