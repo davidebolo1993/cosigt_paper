@@ -33,6 +33,7 @@ samtools sort -@ 15 -n --reference $REF_DECOY -o $outdir/$sample.bam -T $outdir/
 samtools fastq -@ 15 -1 $outdir/$sample.r1.fq.gz -2 $outdir/$sample.r2.fq.gz -0 $outdir/$sample.other.fq.gz -s $outdir/$sample.se.fq.gz $outdir/$sample.bam
 rm $outdir/$sample.bam
 #re-align to primary, sort, compress to cram
+#re-alignment params were taken from the final.cram files headers
 #index has been generated before
 bwa mem \
 	-t 15 \
@@ -41,7 +42,18 @@ bwa mem \
 	$outdir/$sample.r1.fq.gz \
 	$outdir/$sample.r2.fq.gz | samtools sort -@ 10 -m 5G -T $outdir/$sample | samtools view -@ 10 -T $REF_PRIMARY -C -o $outdir/$sample.cram --write-index
 
-rm $outdir/$sample.*gz
+#the .bam file need to be realigned to the decoy
+if [ $sample == "NA24385" ]; then
+	outdir2=$DATA_BASE/1000G/$sample
+	bwa mem \
+        	-t 15 \
+        	-Y -K 100000000 \
+        	$REF_DECOY \
+        	$outdir/$sample.r1.fq.gz \
+        	$outdir/$sample.r2.fq.gz | samtools sort -@ 10 -m 5G -T $outdir2/$sample | samtools view -@ 10 -T $REF_DECOY -C -o $outdir2/$sample.cram --write-index
+fi
+rm $outdir/$sample*gz
+
 #Closing statement
 echo "========================"
 echo "Completed: $(date)"
