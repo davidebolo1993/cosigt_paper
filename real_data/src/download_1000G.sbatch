@@ -48,7 +48,6 @@ wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_referen
 bgzip $DATA_BASE/reference/GRCh38_full_analysis_set_plus_decoy_hla.fa
 samtools faidx $DATA_BASE/reference/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz
 
-
 #Add locityper reference - we will re-align everything against this for a fair comparison - this is the link they provided in their docs
 wget https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_46/GRCh38.primary_assembly.genome.fa.gz -P $DATA_BASE/reference/
 #this is not bgzip-compressed
@@ -61,7 +60,6 @@ module load bwa/0.7.18
 bwa index $DATA_BASE/reference/GRCh38.primary_assembly.genome.fa.gz
 #the bam will be re-aligned to the decoy reference as well, so we need to index that as well
 bwa index $DATA_BASE/reference/GRCh38_full_analysis_set_plus_decoy_hla.fa.gz
-
 
 #Closing statement
 echo "========================"

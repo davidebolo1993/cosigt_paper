@@ -27,7 +27,9 @@ mkdir -p $DATA_BASE/verkko_by_chromosome/$chrom
 for hap in $(zgrep $chrom $RES_BASE/"HGSVC3.partitions.tsv.gz" | cut -f 1); do
     sampleid=$(echo $hap | cut -d "#" -f 1)
     sampledir=$(find $DATA_BASE/*verkko* -name $sampleid)
-    samtools faidx $sampledir/$sampleid".fa.gz" $hap >> $DATA_BASE/verkko_by_chromosome/$chrom/$chrom".fa"
+    samtools faidx $sampledir/$sampleid".fa.gz" $hap | bgzip -@ 5 -l 9 -c >> $DATA_BASE/verkko_by_chromosome/$chrom/$chrom".fa.gz"
 done
-bgzip -@ 5 -l 9 $DATA_BASE/verkko_by_chromosome/$chrom/$chrom".fa"
+#also add chm13v2 chromosomes to the assemblies
+samtools faidx $DATA_BASE/chm13v2/chm13v2.0_maskedY_rCRS.fa.gz $chrom | sed "s/^>$chrom/>chm13v2#1#$chrom/" | bgzip -@ 5 -l 9 -c >> $DATA_BASE/verkko_by_chromosome/$chrom/$chrom".fa.gz"
+#index
 samtools faidx $DATA_BASE/verkko_by_chromosome/$chrom/$chrom".fa.gz"
