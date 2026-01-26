@@ -12,7 +12,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 
 if (length(args) < 2) {
-  cat("Usage: Rscript fig_e1.R <output_prefix> <hla_results>  \n")
+  cat("Usage: Rscript fig1_ext.r <output_prefix> <hla_results>  \n")
   cat("  <output_prefix>: Prefix for output files\n")
   cat("  <hla_results>: Table of HLA typing results (output of get_hla_4dig.R) \n")
   quit(status = 1)
