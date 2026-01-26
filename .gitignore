@@ -1,3 +1,3 @@
 !.gitignore
 !*/.gitignore
-resources/benchmarking/hla_typing/*tsv
+resources/benchmarking/hla_typing/hla_comparison_all_samples.tsv.gz
