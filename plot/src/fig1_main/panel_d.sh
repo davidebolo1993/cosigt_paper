@@ -1,0 +1,5 @@
+Rscript \
+	panel_d.r \
+	panel_d_plot/ \
+	../../data/modern_dna/sv/cyp2d6 \
+	chr22_42031864_42245566
