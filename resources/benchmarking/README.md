@@ -15,10 +15,10 @@ Each subdirectory contains a dedicated `README.md` with detailed information.
 
 ## Benchmarking Strategies
 
-### Leave-zero-out (LZO)
+### Leave-zero-out
 
 Genotyping samples with matching haplotypes in the pangenome graph at various coverages (1X, 2X, 5X, 30X) and conditions (modern DNA, ancient DNA with and without contamination).
 
-### Leave-all-out (LAO)
+### Leave-all-out
 
 Genotyping samples without matching haplotypes in the pangenome graph using full-coverage sequencing data to assess cross-population performance.

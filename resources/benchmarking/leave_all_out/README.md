@@ -27,7 +27,3 @@ Tab-separated files with the following columns:
 - `QV_diff_pred_minus_best` - Difference between predicted and best QV
 
 Haplotype predictions are in the format: `SAMPLE#HAPLOTYPE#CONTIG:START-END`
-
-## Usage
-
-These files assess cross-population generalization by genotyping samples using pangenome graphs that do not contain their haplotypes. The "best" columns represent the optimal achievable accuracy given the available haplotypes.

@@ -31,7 +31,3 @@ Tab-separated files with the following columns:
 - `QV_diff_cosigt_minus_locityper` - QV difference (COSIGT - Locityper)
 
 Haplotype predictions are in the format: `SAMPLE#HAPLOTYPE#CONTIG:START-END`
-
-## Usage
-
-These files contain genotyping predictions and accuracy metrics used to generate figures comparing COSIGT and Locityper performance across different coverage levels and conditions.

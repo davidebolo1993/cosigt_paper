@@ -10,11 +10,3 @@ Sample lists, assembly identifiers, benchmarking regions, and prediction results
 - **[reference/](reference)** - GRCh38 reference genome
 
 Each subdirectory contains a dedicated `README.md` with more detailed information.
-
-## Data Sources
-
-Data files reference publicly available resources:
-- HGSVC (Human Genome Structural Variation Consortium) assemblies
-- HPRC (Human Pangenome Reference Consortium) assemblies
-- 1000 Genomes Project alignments
-- GRCh38 reference genome
