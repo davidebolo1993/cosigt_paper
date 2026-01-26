@@ -22,19 +22,19 @@ These files are routinely generated within every COSIGT run.
 HLA typing comparison data:
 
 - `hla_comparison.tsv` - Full HLA comparison results (Extended Figure 1)
-- `hla_comparison_filt.tsv` - Filtered comparison excluding T1K alleles with quality <= 0 (Supplementary Figure 9)
+- `hla_comparison_filt.tsv` - Filtered comparison excluding T1K alleles with quality <= 0 (Supplementary Data Figure 9)
 
 **Columns:**
 - `gene`, `region` - HLA gene and genomic region
 - `samples_with_data` - Samples with successful predictions from both COSIGT and T1K
-- `samples_with_data_poss` - Subset of above where HLA types have at least one representative in the graph (used for Extended Figure 1 statistics)
+- `samples_with_data_poss` - Subset of above where HLA types have at least one representative in the graph (used for Extended Data Figure 1 statistics)
 - `sample_accuracy_*`, `haplotype_accuracy_*` - Accuracy metrics computed on `samples_with_data`
 - `sample_accuracy_poss_*`, `haplotype_accuracy_poss_*` - Accuracy metrics computed on `samples_with_data_poss`
 - Suffix `_cosigt` or `_t1k` indicates the method
 
 ### time_mem_benchmark/
 
-Runtime and memory usage summaries generated alongside Supplementary Figure 8:
+Runtime and memory usage summaries generated alongside Supplementary Data Figure 8:
 
 - `benchmark_rule_summary.tsv` - Per-rule benchmark statistics
 - `critical_path_analysis.tsv` - Workflow critical path analysis (referenced in manuscript section: `Runtime and memory usage`)
