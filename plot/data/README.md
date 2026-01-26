@@ -26,7 +26,7 @@ HLA typing comparison data:
 
 **Columns:**
 - `gene`, `region` - HLA gene and genomic region
-- `samples_with_data` - Samples with successful predictions from both COSIGT and T1K
+- `samples_with_data` - Samples with successful predictions from both COSIGT, T1K and IMP:02
 - `samples_with_data_poss` - Subset of above where HLA types have at least one representative in the graph (used for Extended Data Figure 1 statistics)
 - `sample_accuracy_*`, `haplotype_accuracy_*` - Accuracy metrics computed on `samples_with_data`
 - `sample_accuracy_poss_*`, `haplotype_accuracy_poss_*` - Accuracy metrics computed on `samples_with_data_poss`
