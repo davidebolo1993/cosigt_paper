@@ -13,7 +13,7 @@ Each directory contains a dedicated `README.md` with detailed information.
 
 If you use this code or data, please cite:
 
-[Citation information to be added upon publication]
+XXX
 
 ## License
 
