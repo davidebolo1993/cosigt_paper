@@ -46,3 +46,9 @@ Runtime and memory usage summaries generated alongside Supplementary Data Figure
 - `time_min_job`, `time_max_job` - Job IDs with minimum and maximum runtime
 - `mem_*_mb` - Memory usage statistics (min, mean, median, max) in MB
 - `mem_min_job`, `mem_max_job` - Job IDs with minimum and maximum memory usage
+
+### region_distances/
+
+Data files for Supplementary Figure 15:
+
+- `region_distances.tsv` - Region diversity quantified as the average normalized distance between clusters for CMRGs, for all tested conditions.

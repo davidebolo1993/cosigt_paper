@@ -6,28 +6,36 @@ Prediction results for samples with matching haplotypes in the pangenome graph.
 
 - **cmrgs_predictions/** - Predictions on CMRG regions (HPRC Year 1 samples)
   - `modern/` - Modern DNA at various coverages (1X, 2X, 5X, 30X)
-  - `aDNA/` - Ancient DNA simulations at 1X and 2X with 0% and 10% contamination
+  - `aDNA/` - Ancient DNA simulations at 1X and 2X with 0% and 10% contamination, including two different demographic scenarios: an ancient sample age of 5 kya with a 20 kya population split, and an ancient sample age of 20 kya with a 100 kya population split)
 - **svs_predictions/** - Predictions on SV regions (HGSVC samples at 30X)
 
 ## File Naming
 
-Files follow the pattern: `cosigt_locityper_{region}_{pangenome}_{coverage}[_{condition}].tsv.gz`
+Files follow the pattern: `cosigt_locityper_{region}_{pangenome}_{coverage}[_{condition}].tsv.gz` for the cosigt-locityper comparison:
 
 - `region`: cmrgs or svs
 - `pangenome`: hprcy1 or hgsvcv3 (or subset for aDNA)
 - `coverage`: 1X, 2X, 5X, or 30X
 - `condition`: (aDNA only) cont0pct or cont10pct
 
+the pattern `cosigt_{region}_{pangenome}_{coverage}[_{condition}].tsv.gz` for the cosigt-only predictions:
+
+
+
+
+
+
+
 ## File Format
 
 Tab-separated files with the following columns:
 
 - `sample`, `region`, `gene_name` - Sample and region identifiers
-- `hap_1_pred_locityper`, `hap_2_pred_locityper` - Locityper haplotype predictions
+- `hap_1_pred_locityper`, `hap_2_pred_locityper` - Locityper haplotype predictions (where applicable)
 - `hap_1_pred_cosigt`, `hap_2_pred_cosigt` - COSIGT haplotype predictions
 - `QV_1_*`, `QV_2_*`, `QV_sum_*` - Quality values (Phred-scaled) for each tool
 - `error_rate_1_*`, `error_rate_2_*`, `avg_error_rate_*` - Per-haplotype and average error rates
-- `error_rate_diff_cosigt_minus_locityper` - Error rate difference (COSIGT - Locityper)
-- `QV_diff_cosigt_minus_locityper` - QV difference (COSIGT - Locityper)
+- `error_rate_diff_cosigt_minus_locityper` - Error rate difference (COSIGT - Locityper, where applicable)
+- `QV_diff_cosigt_minus_locityper` - QV difference (COSIGT - Locityper, where applicable)
 
 Haplotype predictions are in the format: `SAMPLE#HAPLOTYPE#CONTIG:START-END`

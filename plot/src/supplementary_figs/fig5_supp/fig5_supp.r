@@ -12,7 +12,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # Check if correct number of arguments provided
 if (length(args) < 2) {
-  cat("Usage: Rscript fig5_supp.r <output_prefix> <table_file> [max_bars_per_row]\n")
+  cat("Usage: Rscript fig2_supp.r <output_prefix> <table_file> [max_bars_per_row]\n")
   cat("  <output_prefix>: Prefix for output files (without extension)\n")
   cat("  <table_file>: Path to merged table (TSV)\n")
   cat("  [max_bars_per_row]: Optional, maximum bars per row (default: 30)\n")

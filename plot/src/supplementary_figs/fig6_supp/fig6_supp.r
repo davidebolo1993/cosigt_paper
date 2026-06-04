@@ -11,49 +11,29 @@ args <- commandArgs(trailingOnly = TRUE)
 
 
 # Check if correct number of arguments provided
-if (length(args) < 3) {
-  cat("Usage: Rscript panel_d.r <gene_list_file> <output_prefix> <table1:exp1_name> [table2:exp2_name] ...\n")
-  cat("  <gene_list_file>: Text file with one gene name per line\n")
+if (length(args) < 2) {
+  cat("Usage: Rscript fig3_supp.r <output_prefix> <table_file> [max_bars_per_row]\n")
   cat("  <output_prefix>: Prefix for output files (without extension)\n")
-  cat("  <tableN:expN_name>: Table path and experiment name separated by colon\n")
+  cat("  <table_file>: Path to merged table (TSV)\n")
+  cat("  [max_bars_per_row]: Optional, maximum bars per row (default: 30)\n")
   quit(status = 1)
 }
 
 
-gene_list_file <- args[1]
-output_prefix <- args[2]
-exp_args <- args[3:length(args)]
+output_prefix <- args[1]
+table_file <- args[2]
+max_bars_per_row <- ifelse(length(args) >= 3, as.numeric(args[3]), 30)
 
 
-# Parse experiment names and file paths
-experiment_info <- lapply(exp_args, function(x) {
-  parts <- strsplit(x, ":", fixed = TRUE)[[1]]
-  if (length(parts) != 2) {
-    stop(sprintf("Invalid format: %s. Expected format: path:name", x))
-  }
-  list(file = parts[1], name = parts[2])
-})
-
-
-merged_files <- sapply(experiment_info, function(x) x$file)
-experiment_names <- sapply(experiment_info, function(x) x$name)
-
-
-cat("=== Multi-Experiment QV Comparison ===\n")
-cat(sprintf("Gene list file: %s\n", gene_list_file))
+cat("=== Single Dataset QV Comparison (Multi-row) ===\n")
+cat(sprintf("Table file: %s\n", table_file))
 cat(sprintf("Output prefix: %s\n", output_prefix))
-cat(sprintf("Number of experiments: %d\n", length(merged_files)))
-cat("\nExperiments:\n")
-for (i in seq_along(merged_files)) {
-  cat(sprintf("  %s: %s\n", experiment_names[i], merged_files[i]))
-}
+cat(sprintf("Max bars per row: %d\n", max_bars_per_row))
 
 
 # Color-blind friendly palette (Tol palette)
 # For QV quality categories - earth tone gradient
 qv_colors <- c(
-  "failed" = "#000000",           # Black
-  "unknown" = "#999999",          # Gray
   "very low: <= 17" = "#DDCC77",  # Sand/beige
   "low: >17, <= 23" = "#999933",  # Olive
   "mid: >23, <=33" = "#117733",   # Forest green
@@ -69,411 +49,427 @@ performance_colors <- c(
 )
 
 
-# Read gene list
-cat("\nReading gene list...\n")
-if (!file.exists(gene_list_file)) {
-  stop(sprintf("Gene list file not found: %s", gene_list_file))
+# Read data
+cat("\nReading data...\n")
+if (!file.exists(table_file)) {
+  stop(sprintf("Table file not found: %s", table_file))
 }
-gene_list <- read_lines(gene_list_file) %>%
-  str_trim() %>%
-  .[. != ""]  # Remove empty lines
+merged_data <- fread(table_file)
 
 
-# Sort genes alphabetically for consistent plotting
-gene_list_sorted <- sort(gene_list)
-cat(sprintf("Genes to plot: %d genes\n", length(gene_list_sorted)))
+cat(sprintf("Total rows: %d, Unique genes: %d\n", 
+            nrow(merged_data), length(unique(merged_data$gene_name))))
 
 
-# Function to process all experiments and create combined QV data for COSIGT ONLY
-create_combined_qv_data <- function(merged_files, experiment_names, genes) {
-  all_qv_data <- list()
-
-
-  for (i in seq_along(merged_files)) {
-    experiment_file <- merged_files[i]
-    experiment_name <- experiment_names[i]
-
-
-    cat(sprintf("\nProcessing %s...\n", experiment_name))
-    cat(sprintf("  Reading: %s\n", experiment_file))
-
-
-    if (!file.exists(experiment_file)) {
-      warning(sprintf("File not found: %s. Skipping.", experiment_file))
-      next
-    }
-
-
-    merged_data <- fread(experiment_file)
-    cat(sprintf("  Total rows: %d, Unique genes: %d\n", 
-                nrow(merged_data), length(unique(merged_data$gene_name))))
-
-
-    # Filter to selected genes
-    data_filtered <- merged_data %>%
-      filter(gene_name %in% genes)
-
-
-    if (nrow(data_filtered) == 0) {
-      warning(sprintf("No data for selected genes in: %s", experiment_name))
-      next
-    }
-
-
-    # Process COSIGT only
-    qv_cols <- c("QV_1_cosigt", "QV_2_cosigt")
-
-
-    qv_data <- data_filtered %>%
-      select(sample, region, gene_name, all_of(qv_cols)) %>%
-      pivot_longer(
-        cols = all_of(qv_cols),
-        names_to = "metric",
-        values_to = "metric.values"
-      ) %>%
-      mutate(
-        experiment = experiment_name
-      )
-
-
-    all_qv_data[[length(all_qv_data) + 1]] <- qv_data
-  }
-
-
-  # Combine all data
-  combined <- bind_rows(all_qv_data)
-
-
-  # Categorize QV values
-  combined <- combined %>%
-    mutate(
-      quality = factor(
-        case_when(
-          is.infinite(metric.values) & metric.values < 0 ~ "failed",
-          is.na(metric.values)       ~ "unknown",
-          metric.values > 33         ~ "high: >33",
-          metric.values > 23         ~ "mid: >23, <=33",
-          metric.values > 17         ~ "low: >17, <= 23",
-          metric.values <= 17        ~ "very low: <= 17",
-          TRUE                       ~ "unknown"
-        ),
-        levels = c("failed", "unknown", "very low: <= 17", "low: >17, <= 23", "mid: >23, <=33", "high: >33")
-      ),
-      gene_name = factor(gene_name, levels = genes),
-      experiment = factor(experiment, levels = experiment_names)
-    )
-
-
-  # Summarize
-  qv_summary <- combined %>%
-    count(experiment, gene_name, quality) %>%
-    group_by(experiment, gene_name) %>%
-    mutate(
-      total = sum(n),
-      percent = n / total * 100
-    ) %>%
-    ungroup()
-
-
-  return(qv_summary)
+# Function to categorize QV values (valid categories only)
+categorize_qv <- function(qv_values) {
+  factor(
+    case_when(
+      qv_values > 33         ~ "high: >33",
+      qv_values > 23         ~ "mid: >23, <=33",
+      qv_values > 17         ~ "low: >17, <= 23",
+      qv_values <= 17        ~ "very low: <= 17",
+      TRUE                   ~ NA_character_
+    ),
+    levels = c("very low: <= 17", "low: >17, <= 23", "mid: >23, <=33", "high: >33")
+  )
 }
 
 
-# Function to create combined error rate data
-create_combined_error_data <- function(merged_files, experiment_names, genes) {
-  all_error_data <- list()
+# Process COSIGT QV data
+cat("\n=== Processing COSIGT QV data ===\n")
+qv_cols_cosigt <- c("QV_1_cosigt", "QV_2_cosigt")
 
 
-  for (i in seq_along(merged_files)) {
-    experiment_file <- merged_files[i]
-    experiment_name <- experiment_names[i]
+qv_data_cosigt <- merged_data %>%
+  select(sample, region, gene_name, all_of(qv_cols_cosigt)) %>%
+  pivot_longer(
+    cols = all_of(qv_cols_cosigt),
+    names_to = "metric",
+    values_to = "metric.values"
+  ) %>%
+  mutate(
+    quality = categorize_qv(metric.values)
+  ) %>%
+  filter(!is.na(quality))  # Remove any NA quality values
 
 
-    if (!file.exists(experiment_file)) next
+# Summarize QV by gene
+qv_summary <- qv_data_cosigt %>%
+  count(gene_name, quality) %>%
+  group_by(gene_name) %>%
+  mutate(
+    total = sum(n),
+    percent = n / total * 100
+  ) %>%
+  ungroup()
 
 
-    merged_data <- fread(experiment_file)
+# Order genes by percentage of high quality QVs
+gene_order_df <- qv_summary %>%
+  filter(quality == "high: >33") %>%
+  arrange(desc(percent))
 
 
-    data_filtered <- merged_data %>%
-      filter(gene_name %in% genes)
-
-
-    if (nrow(data_filtered) == 0) next
-
-
-    diff_summary <- data_filtered %>%
-      group_by(gene_name) %>%
-      summarise(
-        avg_error_rate_diff = mean(avg_error_rate_locityper - avg_error_rate_cosigt, na.rm = TRUE),
-        n_samples = n(),
-        .groups = "drop"
-      ) %>%
-      mutate(
-        experiment = experiment_name,
-        gene_name = factor(gene_name, levels = genes),
-        abs_error_rate_diff = abs(avg_error_rate_diff),
-        performance = ifelse(avg_error_rate_diff > 0, "cosigt_better", "locityper_better")
-      )
-
-
-    all_error_data[[i]] <- diff_summary
-  }
-
-
-  # Combine all data
-  combined_error <- bind_rows(all_error_data) %>%
-    mutate(experiment = factor(experiment, levels = experiment_names))
-
-
-  return(combined_error)
+all_genes <- unique(qv_summary$gene_name)
+missing_genes <- setdiff(all_genes, gene_order_df$gene_name)
+if (length(missing_genes) > 0) {
+  missing_df <- data.frame(gene_name = missing_genes, percent = 0)
+  gene_order_df <- bind_rows(gene_order_df, missing_df)
 }
 
 
-# Create combined QV data (cosigt only)
-cat("\n=== Creating QV comparison plot (cosigt only) ===\n")
-qv_summary <- create_combined_qv_data(merged_files, experiment_names, gene_list_sorted)
+gene_order <- gene_order_df$gene_name
 
 
-# Create faceted QV plot - UPDATED with increased facet spacing
-qv_plot <- ggplot(qv_summary, aes(x = gene_name, y = percent, fill = quality)) +
-  geom_bar(stat = "identity", position = "stack", width = 0.8) +
-  facet_grid(experiment ~ ., scales = "fixed") +
-  scale_fill_manual(
-    values = qv_colors,
-    name = expression(QV[pred])
-  ) +
-  labs(
-    x = "Gene",
-    y = expression("% of"~QV[pred])
-  ) +
-  theme_bw(base_family = "Helvetica") +
-  theme(
-    # Nature Methods: 5-7pt text, sans-serif (Helvetica) - but should be rescaled to the entire figure
-    axis.title = element_text(size = 24, family = "Helvetica"),
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 24, family = "Helvetica"),
-    axis.text.y = element_text(size = 24, family = "Helvetica"),
-    strip.text.y = element_text(size = 24, family = "Helvetica", margin = margin(t = 8, b = 8, l = 5, r = 5, unit = "pt")),
-    strip.background = element_rect(fill = "white"),
-    legend.position = "bottom",
-    legend.direction = "horizontal",
-    legend.text = element_text(size = 24, family = "Helvetica"),
-    legend.title = element_text(size = 24, family = "Helvetica"),
-    plot.margin = margin(t = 5, r = 20, b = 5, l = 5, unit = "pt"),
-    panel.spacing.y = unit(1.2, "lines")
-  ) +
-  guides(fill = guide_legend(nrow = 1)) +
-  scale_y_continuous(
-    breaks = seq(0, 100, by = 25),
-    expand = expansion(mult = c(0, 0.05))
+qv_summary <- qv_summary %>%
+  mutate(gene_name = factor(gene_name, levels = gene_order))
+
+
+cat(sprintf("Processed %d genes\n", length(gene_order)))
+
+
+# Calculate sample counts per gene
+cat("\n=== Calculating sample counts ===\n")
+gene_sample_counts <- merged_data %>%
+  group_by(gene_name) %>%
+  summarise(n_samples = n_distinct(sample), .groups = "drop") %>%
+  mutate(gene_name = factor(gene_name, levels = gene_order))
+
+
+cat(sprintf("Sample counts calculated for %d genes\n", nrow(gene_sample_counts)))
+
+
+# Process error rate data
+cat("\n=== Processing error rate data ===\n")
+
+
+error_data <- merged_data %>%
+  group_by(gene_name) %>%
+  summarise(
+    avg_error_rate_diff = mean(avg_error_rate_locityper - avg_error_rate_cosigt, na.rm = TRUE),
+    n_calls = n(),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    gene_name = factor(gene_name, levels = gene_order),
+    abs_error_rate_diff = abs(avg_error_rate_diff),
+    performance = ifelse(avg_error_rate_diff > 0, "cosigt_better", "locityper_better")
   )
 
 
-# Create combined error data
-cat("\n=== Creating error rate plot ===\n")
-error_data <- create_combined_error_data(merged_files, experiment_names, gene_list_sorted)
-
-
-# Calculate GLOBAL max for background bars
+# Calculate global max for background bars
 global_max_diff <- max(error_data$abs_error_rate_diff, na.rm = TRUE)
 
 
-error_data_with_max <- error_data %>%
+error_data <- error_data %>%
   mutate(max_diff = global_max_diff)
 
 
-# Create faceted error rate plot - UPDATED with increased facet spacing
-error_plot <- ggplot(error_data_with_max, aes(x = gene_name)) +
-  # Background bar at max height (light gray with dashed outline)
-  geom_bar(aes(y = max_diff), stat = "identity", 
-           fill = "gray90", color = "gray60", linetype = "dashed", linewidth = 0.1, width = 0.8) +
-  # Colored bar at actual value
-  geom_bar(aes(y = abs_error_rate_diff, fill = performance), stat = "identity", linewidth = 0.1, width = 0.8) +
-  facet_grid(experiment ~ ., scales = "fixed") +
+# Calculate layout
+num_genes <- length(gene_order)
+num_rows <- ceiling(num_genes / max_bars_per_row)
+bars_per_row <- ceiling(num_genes / num_rows)
+
+
+cat(sprintf("\nPlotting %d genes in %d rows (%d bars per row)\n", 
+            num_genes, num_rows, bars_per_row))
+
+
+# Determine middle row for y-axis labels
+middle_row_qv <- ceiling(num_rows / 2)
+middle_row_error <- ceiling(num_rows / 2)
+
+
+# Create plots row by row
+qv_plots <- list()
+error_plots <- list()
+
+
+for (i in 1:num_rows) {
+  start_idx <- (i-1) * bars_per_row + 1
+  end_idx <- min(i * bars_per_row, num_genes)
+  if (start_idx > num_genes) break
+  
+  genes_in_row <- gene_order[start_idx:end_idx]
+  
+  # Filter data for this row
+  row_qv_data <- qv_summary %>%
+    filter(gene_name %in% genes_in_row) %>%
+    mutate(gene_name = factor(gene_name, levels = genes_in_row))
+  
+  row_sample_counts <- gene_sample_counts %>%
+    filter(gene_name %in% genes_in_row) %>%
+    mutate(gene_name = factor(gene_name, levels = genes_in_row))
+  
+  # QV plot for this row - only middle row gets y-axis label
+  qv_plot <- ggplot(row_qv_data, aes(x = gene_name, y = percent, fill = quality)) +
+    geom_bar(stat = "identity", position = "stack", width = 0.8) +
+    geom_text(
+      data = row_sample_counts,
+      aes(x = gene_name, y = 101, label = n_samples),
+      inherit.aes = FALSE,
+      angle = 90,
+      hjust = -0.1,
+      vjust = 0.5,
+      size = 6,
+      family = "Helvetica"
+    ) +
+    scale_fill_manual(
+      values = qv_colors,
+      name = expression(QV[pred]),
+      drop = FALSE
+    ) +
+    labs(
+      x = if(i == num_rows) "Gene" else "",
+      y = if(i == middle_row_qv) expression("% of"~QV[pred]) else ""
+    ) +
+    theme_bw(base_family = "Helvetica") +
+    theme(
+      axis.title = element_text(size = 24, family = "Helvetica"),
+      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 24, family = "Helvetica"),
+      axis.text.y = element_text(size = 24, family = "Helvetica"),
+      legend.position = "none",
+      plot.margin = margin(t = 5, r = 20, b = 5, l = 5, unit = "pt")
+    ) +
+    guides(fill = guide_legend(nrow = 1)) +
+    scale_y_continuous(
+      limits = c(0, 115),
+      breaks = seq(0, 100, by = 25),
+      expand = expansion(mult = c(0, 0))
+    )
+  
+  qv_plots[[i]] <- qv_plot
+  
+  # Error plot for this row - only middle row gets y-axis label, no sample counts
+  row_error_data <- error_data %>%
+    filter(gene_name %in% genes_in_row) %>%
+    mutate(gene_name = factor(gene_name, levels = genes_in_row))
+  
+  error_plot <- ggplot(row_error_data, aes(x = gene_name)) +
+    # Background bar at max height
+    geom_bar(aes(y = max_diff), stat = "identity", 
+             fill = "gray90", color = "gray60", linetype = "dashed", 
+             linewidth = 0.1, width = 0.8) +
+    # Colored bar at actual value
+    geom_bar(aes(y = abs_error_rate_diff, fill = performance), 
+             stat = "identity", linewidth = 0.1, width = 0.8) +
+    scale_fill_manual(
+      values = performance_colors,
+      labels = c(
+        "locityper_better" = "locityper better",
+        "cosigt_better" = "cosigt better"
+      ),
+      name = "Performance",
+      drop = FALSE
+    ) +
+    labs(
+      x = if(i == num_rows) "Gene" else "",
+      y = if(i == middle_row_error) "Average error rate difference\n|locityper - cosigt|" else ""
+    ) +
+    theme_bw(base_family = "Helvetica") +
+    theme(
+      axis.title = element_text(size = 24, family = "Helvetica"),
+      axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 24, family = "Helvetica"),
+      axis.text.y = element_text(size = 24, family = "Helvetica"),
+      legend.position = "none",
+      plot.margin = margin(t = 5, r = 5, b = 5, l = 20, unit = "pt")
+    ) +
+    guides(fill = guide_legend(nrow = 1)) +
+    scale_y_continuous(
+      expand = expansion(mult = c(0, 0.05))
+    )
+  
+  error_plots[[i]] <- error_plot
+}
+
+
+# Extract legends - only valid QV categories
+cat("\n=== Extracting legends ===\n")
+
+# Create dummy QV data with all valid categories (no failed/unknown)
+dummy_qv_data <- data.frame(
+  gene_name = rep("dummy", 4),
+  quality = factor(
+    c("very low: <= 17", "low: >17, <= 23", "mid: >23, <=33", "high: >33"),
+    levels = c("very low: <= 17", "low: >17, <= 23", "mid: >23, <=33", "high: >33")
+  ),
+  percent = rep(1, 4)
+)
+
+qv_plot_for_legend <- ggplot(dummy_qv_data, aes(x = gene_name, y = percent, fill = quality)) +
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(
+    values = qv_colors,
+    name = expression(QV[pred]),
+    drop = FALSE
+  ) +
+  theme_bw(base_family = "Helvetica") +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.text = element_text(size = 24, family = "Helvetica"),
+    legend.title = element_text(size = 24, family = "Helvetica")
+  ) +
+  guides(fill = guide_legend(nrow = 1))
+
+qv_legend <- get_legend(qv_plot_for_legend)
+
+
+# Create dummy error data with both performance categories
+dummy_error_data <- data.frame(
+  gene_name = rep("dummy", 2),
+  performance = factor(
+    c("locityper_better", "cosigt_better"),
+    levels = c("locityper_better", "cosigt_better")
+  ),
+  abs_error_rate_diff = rep(1, 2)
+)
+
+error_plot_for_legend <- ggplot(dummy_error_data, aes(x = gene_name, y = abs_error_rate_diff, fill = performance)) +
+  geom_bar(stat = "identity") +
   scale_fill_manual(
     values = performance_colors,
     labels = c(
       "locityper_better" = "locityper better",
       "cosigt_better" = "cosigt better"
     ),
-    name = "Performance"
-  ) +
-  labs(
-    x = "Gene",
-    y = "Average error rate difference\n|locityper - cosigt|"
+    name = "Performance",
+    drop = FALSE
   ) +
   theme_bw(base_family = "Helvetica") +
   theme(
-    # Nature Methods: 5-7pt text, sans-serif (Helvetica)
-    axis.title = element_text(size = 24, family = "Helvetica"),
-    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 24, family = "Helvetica"),
-    axis.text.y = element_text(size = 24, family = "Helvetica"),
-    strip.text.y = element_text(size = 24, family = "Helvetica", margin = margin(t = 8, b = 8, l = 5, r = 5, unit = "pt")),
-    strip.background = element_rect(fill = "white"),
     legend.position = "bottom",
     legend.direction = "horizontal",
     legend.text = element_text(size = 24, family = "Helvetica"),
-    legend.title = element_text(size = 24, family = "Helvetica"),
-    plot.margin = margin(t = 5, r = 5, b = 5, l = 20, unit = "pt"),
-    panel.spacing.y = unit(1.2, "lines") 
+    legend.title = element_text(size = 24, family = "Helvetica")
   ) +
   guides(fill = guide_legend(nrow = 1))
 
+error_legend <- get_legend(error_plot_for_legend)
 
-# Combine QV plot and error plot side by side
-cat("\n=== Creating final combined plot ===\n")
+
+# Combine legends horizontally
+combined_legend <- plot_grid(
+  qv_legend, 
+  error_legend, 
+  ncol = 2, 
+  rel_widths = c(1.25, 1)
+)
+
+
+# Combine plots for each row
+cat("\n=== Creating combined plots ===\n")
+row_combined_plots <- list()
+
+
+for (i in 1:num_rows) {
+  row_combined <- plot_grid(
+    qv_plots[[i]],
+    error_plots[[i]],
+    ncol = 2,
+    align = 'h',
+    axis = 'tb',
+    rel_widths = c(1.25, 1)
+  )
+  row_combined_plots[[i]] <- row_combined
+}
+
+
+# Stack all rows vertically
+all_plots_stacked <- plot_grid(
+  plotlist = row_combined_plots,
+  ncol = 1,
+  align = 'v',
+  axis = 'lr'
+)
+
+
+# Add legend at the very bottom
 final_plot <- plot_grid(
-  qv_plot,
-  error_plot,
-  ncol = 2,
-  align = 'h',
-  axis = 'tb',
-  rel_widths = c(1.25, 1),
-  label_size = 22,
-  label_fontface = "bold"
+  all_plots_stacked,
+  combined_legend,
+  ncol = 1,
+  rel_heights = c(1, 0.08)
 )
 
 
 # Calculate plot dimensions
-num_genes <- length(gene_list_sorted)
-num_experiments <- length(merged_files)
-plot_width <- max(22, num_genes * 0.55 + 7)
-plot_height <- max(17, num_experiments * 2.2)
+plot_width <- max(22, bars_per_row * 0.55 + 7)
+plot_height <- max(8, num_rows * 5.5)
 
 
 cat(sprintf("Plot dimensions: %.1f x %.1f inches\n", plot_width, plot_height))
 
 
 # Save in multiple formats
-output_png <- paste0(output_prefix, ".multi_comparison.png")
+output_png <- paste0(output_prefix, ".multi_row_comparison.png")
 cat(sprintf("Saving PNG: %s\n", output_png))
 ggsave(output_png, plot = final_plot, 
        width = plot_width, height = plot_height, 
        dpi = 600, limitsize = FALSE)
 
 
-output_pdf <- paste0(output_prefix, ".multi_comparison.pdf")
+output_pdf <- paste0(output_prefix, ".multi_row_comparison.pdf")
 cat(sprintf("Saving PDF: %s\n", output_pdf))
 ggsave(output_pdf, plot = final_plot, 
        width = plot_width, height = plot_height, 
        limitsize = FALSE)
 
 
-output_svg <- paste0(output_prefix, ".multi_comparison.svg")
+output_svg <- paste0(output_prefix, ".multi_row_comparison.svg")
 cat(sprintf("Saving SVG: %s\n", output_svg))
 ggsave(output_svg, plot = final_plot, 
        width = plot_width, height = plot_height, 
        device = "svg", limitsize = FALSE)
 
 
-
-output_eps <- paste0(output_prefix, ".multi_comparison.eps")
+output_eps <- paste0(output_prefix, ".multi_row_comparison.eps")
 cat(sprintf("Saving EPS: %s\n", output_eps))
 ggsave(output_eps, plot = final_plot, 
        width = plot_width, height = plot_height, 
        device = "eps", limitsize = FALSE)
 
 
-# === Calculate summary statistics for figure legend ===
+# === Calculate summary statistics ===
 cat("\n=== Summary Statistics ===\n")
 
-# Enhanced QV statistics by experiment for BOTH cosigt and locityper
-qv_stats_enhanced <- list()
+
+# QV statistics for BOTH cosigt and locityper
+qv_cols_locityper <- c("QV_1_locityper", "QV_2_locityper")
 
 
-for (i in seq_along(merged_files)) {
-  experiment_file <- merged_files[i]
-  experiment_name <- experiment_names[i]
+qv_data_locityper <- merged_data %>%
+  select(sample, region, gene_name, all_of(qv_cols_locityper)) %>%
+  pivot_longer(
+    cols = all_of(qv_cols_locityper),
+    names_to = "metric",
+    values_to = "metric.values"
+  ) %>%
+  mutate(
+    quality = categorize_qv(metric.values),
+    tool = "locityper"
+  ) %>%
+  filter(!is.na(quality))
 
 
-  if (!file.exists(experiment_file)) next
+qv_data_cosigt <- qv_data_cosigt %>%
+  mutate(tool = "cosigt")
 
 
-  merged_data <- fread(experiment_file)
+combined_qv <- bind_rows(qv_data_cosigt, qv_data_locityper)
 
 
-  data_filtered <- merged_data %>%
-    filter(gene_name %in% gene_list_sorted)
+qv_stats <- combined_qv %>%
+  group_by(tool) %>%
+  summarise(
+    total_calls = n(),
+    pct_high = 100 * sum(quality == "high: >33") / n(),
+    pct_mid_or_higher = 100 * sum(quality %in% c("high: >33", "mid: >23, <=33")) / n(),
+    pct_low_or_worse = 100 * sum(quality %in% c("low: >17, <= 23", "very low: <= 17")) / n(),
+    .groups = "drop"
+  )
 
-
-  if (nrow(data_filtered) == 0) next
-
-
-  # Process COSIGT
-  qv_cols_cosigt <- c("QV_1_cosigt", "QV_2_cosigt")
-  qv_data_cosigt <- data_filtered %>%
-    select(sample, region, gene_name, all_of(qv_cols_cosigt)) %>%
-    pivot_longer(
-      cols = all_of(qv_cols_cosigt),
-      names_to = "metric",
-      values_to = "metric.values"
-    ) %>%
-    mutate(
-      quality = case_when(
-        is.infinite(metric.values) & metric.values < 0 ~ "failed",
-        is.na(metric.values)       ~ "unknown",
-        metric.values > 33         ~ "high: >33",
-        metric.values > 23         ~ "mid: >23, <=33",
-        metric.values > 17         ~ "low: >17, <= 23",
-        metric.values <= 17        ~ "very low: <= 17",
-        TRUE                       ~ "unknown"
-      ),
-      tool = "cosigt"
-    )
-
-
-  # Process LOCITYPER
-  qv_cols_locityper <- c("QV_1_locityper", "QV_2_locityper")
-  qv_data_locityper <- data_filtered %>%
-    select(sample, region, gene_name, all_of(qv_cols_locityper)) %>%
-    pivot_longer(
-      cols = all_of(qv_cols_locityper),
-      names_to = "metric",
-      values_to = "metric.values"
-    ) %>%
-    mutate(
-      quality = case_when(
-        is.infinite(metric.values) & metric.values < 0 ~ "failed",
-        is.na(metric.values)       ~ "unknown",
-        metric.values > 33         ~ "high: >33",
-        metric.values > 23         ~ "mid: >23, <=33",
-        metric.values > 17         ~ "low: >17, <= 23",
-        metric.values <= 17        ~ "very low: <= 17",
-        TRUE                       ~ "unknown"
-      ),
-      tool = "locityper"
-    )
-
-
-  # Combine and summarize
-  combined_qv <- bind_rows(qv_data_cosigt, qv_data_locityper)
-
-
-  qv_stats_exp <- combined_qv %>%
-    group_by(tool) %>%
-    summarise(
-      total_calls = n(),
-      pct_high = 100 * sum(quality == "high: >33") / n(),
-      pct_mid_or_higher = 100 * sum(quality %in% c("high: >33", "mid: >23, <=33")) / n(),
-      pct_low_or_worse = 100 * sum(quality %in% c("low: >17, <= 23", "very low: <= 17", "failed", "unknown")) / n(),
-      n_failed = sum(quality == "failed"),
-      pct_failed = 100 * sum(quality == "failed") / n(),
-      n_unknown = sum(quality == "unknown"),
-      pct_unknown = 100 * sum(quality == "unknown") / n(),
-      .groups = "drop"
-    ) %>%
-    mutate(experiment = experiment_name)
-
-
-  qv_stats_enhanced[[i]] <- qv_stats_exp
-}
-
-
-qv_stats <- bind_rows(qv_stats_enhanced) %>%
-  select(experiment, tool, total_calls, 
-         n_failed, pct_failed, n_unknown, pct_unknown,
-         pct_high, pct_mid_or_higher, pct_low_or_worse) %>%
-  arrange(experiment, tool)
 
 # Save QV statistics
 qv_stats_file <- paste0(output_prefix, ".qv_statistics.tsv")
@@ -481,9 +477,8 @@ write_tsv(qv_stats, qv_stats_file)
 cat(sprintf("Saved: %s\n", qv_stats_file))
 
 
-# Error rate statistics by experiment
+# Error rate statistics
 error_stats <- error_data %>%
-  group_by(experiment) %>%
   summarise(
     n_genes = n(),
     cosigt_better = sum(performance == "cosigt_better"),
@@ -491,8 +486,7 @@ error_stats <- error_data %>%
     pct_cosigt_better = 100 * sum(performance == "cosigt_better") / n(),
     pct_locityper_better = 100 * sum(performance == "locityper_better") / n(),
     median_abs_diff = median(abs_error_rate_diff, na.rm = TRUE),
-    mean_abs_diff = mean(abs_error_rate_diff, na.rm = TRUE),
-    .groups = "drop"
+    mean_abs_diff = mean(abs_error_rate_diff, na.rm = TRUE)
   )
 
 
@@ -502,24 +496,23 @@ write_tsv(error_stats, error_stats_file)
 cat(sprintf("Saved: %s\n", error_stats_file))
 
 
-# Coverage comparison - by individual experiment
-error_data_grouped <- error_data %>%
-  group_by(experiment) %>%
-  summarise(
-    n_observations = n(),
-    cosigt_better_count = sum(performance == "cosigt_better"),
-    locityper_better_count = sum(performance == "locityper_better"),
-    pct_cosigt_better = 100 * sum(performance == "cosigt_better") / n(),
-    pct_locityper_better = 100 * sum(performance == "locityper_better") / n(),
-    mean_abs_diff = mean(abs_error_rate_diff, na.rm = TRUE),
-    median_abs_diff = median(abs_error_rate_diff, na.rm = TRUE),
-    .groups = "drop"
-  )
+# Save QV summary
+qv_summary_file <- paste0(output_prefix, ".qv_summary.tsv")
+write_tsv(qv_summary, qv_summary_file)
+cat(sprintf("Saved: %s\n", qv_summary_file))
 
 
-# Save coverage group comparison
-coverage_stats_file <- paste0(output_prefix, ".coverage_comparison.tsv")
-write_tsv(error_data_grouped, coverage_stats_file)
-cat(sprintf("Saved: %s\n", coverage_stats_file))
+# Save error data
+error_data_file <- paste0(output_prefix, ".error_data.tsv")
+write_tsv(error_data, error_data_file)
+cat(sprintf("Saved: %s\n", error_data_file))
 
-cat("\n")
+
+# Save sample counts
+sample_counts_file <- paste0(output_prefix, ".sample_counts.tsv")
+write_tsv(gene_sample_counts, sample_counts_file)
+cat(sprintf("Saved: %s\n", sample_counts_file))
+
+
+cat("\n=== Done! ===\n")
+
