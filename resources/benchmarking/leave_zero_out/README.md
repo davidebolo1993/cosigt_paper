@@ -1,41 +1,40 @@
 # Leave-Zero-Out
 
-Prediction results for samples with matching haplotypes in the pangenome graph.
+Prediction results for samples whose matching haplotypes are present in the
+pangenome graph.
 
 ## Structure
 
-- **cmrgs_predictions/** - Predictions on CMRG regions (HPRC Year 1 samples)
-  - `modern/` - Modern DNA at various coverages (1X, 2X, 5X, 30X)
-  - `aDNA/` - Ancient DNA simulations at 1X and 2X with 0% and 10% contamination, including two different demographic scenarios: an ancient sample age of 5 kya with a 20 kya population split, and an ancient sample age of 20 kya with a 100 kya population split)
-- **svs_predictions/** - Predictions on SV regions (HGSVC samples at 30X)
+- **cmrgs_predictions/modern/** - CMRG COSIGT-vs-Locityper comparison tables at 1X, 2X, 5X, and 30X, plus a COSIGT VCF at 30X
+- **cmrgs_predictions/aDNA/** - Simulated ancient-DNA CMRG predictions at 1X and 2X with 0% or 10% contamination
+- **svs_predictions/** - SV-region predictions for HGSVCv3 samples at 30X
+
+The aDNA directory contains COSIGT-vs-Locityper comparison tables and
+COSIGT-only tables for the `anc5k_split20k` and `anc20k_split100k` simulation
+settings used in the paper.
 
 ## File Naming
 
-Files follow the pattern: `cosigt_locityper_{region}_{pangenome}_{coverage}[_{condition}].tsv.gz` for the cosigt-locityper comparison:
+Comparison tables follow this broad pattern:
 
-- `region`: cmrgs or svs
-- `pangenome`: hprcy1 or hgsvcv3 (or subset for aDNA)
-- `coverage`: 1X, 2X, 5X, or 30X
-- `condition`: (aDNA only) cont0pct or cont10pct
+- `cosigt_locityper_<target>_<graph>_<condition>.tsv.gz` for COSIGT and Locityper comparisons
+- `cosigt_<target>_<graph>_<condition>.tsv.gz` for COSIGT-only aDNA summaries
+- `cosigt_<target>_<graph>_<coverage>.vcf.gz` for COSIGT VCF output where included
 
-the pattern `cosigt_{region}_{pangenome}_{coverage}[_{condition}].tsv.gz` for the cosigt-only predictions:
-
-
-
-
-
-
+Common condition tokens include coverage (`1X`, `2X`, `5X`, `30X`),
+contamination (`cont0pct`, `cont10pct`), and aDNA demographic labels such as
+`anc5k_split20k` or `anc20k_split100k`.
 
 ## File Format
 
-Tab-separated files with the following columns:
+Comparison TSVs contain these core columns:
 
 - `sample`, `region`, `gene_name` - Sample and region identifiers
-- `hap_1_pred_locityper`, `hap_2_pred_locityper` - Locityper haplotype predictions (where applicable)
+- `hap_1_pred_locityper`, `hap_2_pred_locityper` - Locityper haplotype predictions, where available
 - `hap_1_pred_cosigt`, `hap_2_pred_cosigt` - COSIGT haplotype predictions
-- `QV_1_*`, `QV_2_*`, `QV_sum_*` - Quality values (Phred-scaled) for each tool
+- `QV_1_*`, `QV_2_*`, `QV_sum_*` - Phred-scaled quality values
 - `error_rate_1_*`, `error_rate_2_*`, `avg_error_rate_*` - Per-haplotype and average error rates
-- `error_rate_diff_cosigt_minus_locityper` - Error rate difference (COSIGT - Locityper, where applicable)
-- `QV_diff_cosigt_minus_locityper` - QV difference (COSIGT - Locityper, where applicable)
+- `error_rate_diff_cosigt_minus_locityper` - COSIGT minus Locityper error-rate difference, where available
+- `QV_diff_cosigt_minus_locityper` - COSIGT minus Locityper QV difference, where available
 
-Haplotype predictions are in the format: `SAMPLE#HAPLOTYPE#CONTIG:START-END`
+Haplotype predictions are written as `SAMPLE#HAPLOTYPE#CONTIG:START-END`.

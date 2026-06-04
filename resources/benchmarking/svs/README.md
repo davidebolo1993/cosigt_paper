@@ -1,13 +1,15 @@
 # SVs
 
-Structural variant regions for benchmarking.
+Structural variant-containing gene regions used for benchmarking.
 
 ## Files
 
-- `svs_refined.hgsvcv3.bed` - Refined SV-containing gene regions after COSIGT refine step
+- `svs_refined.hgsvcv3.bed` - 265 refined SV-containing gene regions
 
 ## Description
 
-Gene regions containing structural variants identified and refined using COSIGT's refinement process. Unlike CMRGs (adapted from Locityper), this SV region set is newly defined for this study and further detailed in the manuscript.
+This target set was defined for the COSIGT study and refined with the COSIGT
+region-refinement workflow. It is used for the HGSVCv3-based SV benchmark tables
+and figure panels.
 
 **Format**: BED file with 4 columns (chromosome, start, end, gene name)

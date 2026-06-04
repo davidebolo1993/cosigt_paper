@@ -1,6 +1,7 @@
 # Benchmarking
 
-Truth sets, benchmarking regions, and COSIGT/Locityper prediction results.
+Benchmark regions, exclusion masks, HLA resources, and prediction tables used to
+evaluate COSIGT in the manuscript.
 
 ## Structure
 
@@ -17,8 +18,12 @@ Each subdirectory contains a dedicated `README.md` with detailed information.
 
 ### Leave-zero-out
 
-Genotyping samples with matching haplotypes in the pangenome graph at various coverages (1X, 2X, 5X, 30X) and conditions (modern DNA, ancient DNA with and without contamination across different demographic scenarios).
+Samples are genotyped against graphs that include matching haplotypes. These
+tables cover modern-read conditions at 1X, 2X, 5X, and 30X, plus simulated
+ancient-DNA conditions at 1X and 2X with 0% or 10% contamination.
 
 ### Leave-all-out
 
-Genotyping samples without matching haplotypes in the pangenome graph using full-coverage sequencing data to assess cross-population performance.
+Samples are genotyped against graphs built from an alternate pangenome, so the
+exact target haplotypes are absent. Tables include the COSIGT prediction and the
+best available alternate-pangenome match used as the lower-bound comparator.

@@ -1,12 +1,12 @@
 # HLA Typing
 
-HLA typing comparison data and genomic regions.
+HLA typing resources used for the manuscript comparison panels.
 
 ## Files
 
 - `hla_comparison_all_samples.tsv.gz` - Full HLA typing comparison results (excluded from repository)
-- `hla_walt.bed` - HLA gene regions with alternative haplotypes
-- `hprcy2.chr6.txt` - HPRC Year 2 chromosome 6 contig identifiers
+- `hla_walt.bed` - Seven HLA gene regions with primary and alternative GRCh38 haplotype coordinates
+- `hprcy2.chr6.txt` - HPRC Year 2 chromosome 6 contig identifiers used for HLA graph construction
 
 ## Description
 
@@ -21,10 +21,13 @@ BED file containing HLA gene regions (HLA-A, HLA-B, HLA-C, HLA-DPA1, HLA-DPB1, H
 
 ### hprcy2.chr6.txt
 
-List of HPRC Year 2 assembly contig identifiers mapping to chromosome 6, used for constructing the HLA-specific pangenome graph.
+List of HPRC Year 2 assembly contig identifiers mapping to chromosome 6, used
+for constructing the HLA-specific pangenome graph.
 
-**Format**: One contig identifier per line in the  [PanSN-spec](https://github.com/pangenome/PanSN-spec) `SAMPLE#HAPLOTYPE#CONTIG`
+**Format**: One contig identifier per line in the [PanSN-spec](https://github.com/pangenome/PanSN-spec) `SAMPLE#HAPLOTYPE#CONTIG`
 
 ## Note
 
-`hla_comparison_all_samples.tsv.gz` contains sensitive sample-level data and is excluded from the repository. Summary statistics are available in the plotting data directory.
+`hla_comparison_all_samples.tsv.gz` contains sample-level data and is excluded
+from the repository. The summary tables used by the HLA plots are stored in
+`../../../plot/data/hla/`.

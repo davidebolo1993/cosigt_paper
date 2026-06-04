@@ -1,16 +1,17 @@
 # Reference
 
-GRCh38 reference genome URLs used for alignment and benchmarking.
+GRCh38 reference genome URL manifests used for alignment, realignment, and
+benchmarking.
 
 ## Files
 
-- `grch38.decoy.txt` - GRCh38 full analysis set with decoy sequences and HLA contigs
-- `grch38.primary.txt` - GRCh38 primary assembly (GENCODE release 46)
+- `grch38.decoy.txt` - One URL for the GRCh38 full analysis set with decoys and HLA contigs
+- `grch38.primary.txt` - One URL for the GRCh38 primary assembly from GENCODE release 46
 
 ## Usage
 
-- **grch38.decoy.txt**: Original reference genome for 1000 Genomes Project alignments (see `../alignments/`)
-- **grch38.primary.txt**: Reference genome used for realigning samples in leave-zero-out and leave-all-out benchmarking experiments
+- `grch38.decoy.txt` records the original reference used by the 1000 Genomes CRAM alignments listed in `../alignments/`.
+- `grch38.primary.txt` records the primary assembly used when samples were realigned for the benchmarking experiments.
 
 ## Sources
 
