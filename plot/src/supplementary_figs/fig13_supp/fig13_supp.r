@@ -12,7 +12,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # Check if correct number of arguments provided
 if (length(args) < 3) {
-  cat("Usage: Rscript panel_d.r <gene_list_file> <output_prefix> <table1:exp1_name> [table2:exp2_name] ...\n")
+  cat("Usage: Rscript fig13_supp.r <gene_list_file> <output_prefix> <table1:exp1_name> [table2:exp2_name] ...\n")
   cat("  <gene_list_file>: Text file with one gene name per line\n")
   cat("  <output_prefix>: Prefix for output files (without extension)\n")
   cat("  <tableN:expN_name>: Table path and experiment name separated by colon\n")

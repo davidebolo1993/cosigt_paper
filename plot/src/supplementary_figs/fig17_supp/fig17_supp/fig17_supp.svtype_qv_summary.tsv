@@ -1,0 +1,4 @@
+sv_type	n_calls	n_samples	n_genes	pct_high	pct_mid_or_higher	pct_low_or_worse	median_qv	mean_qv
+COMPLEX	1898	64	17	95.1	96.26	3.74	56.749	53.021
+DEL	20550	64	174	98.12	98.85	1.15	56.368	55.029
+INS	8166	64	74	93.64	94.75	5.25	56.428	53.15
